@@ -1,6 +1,6 @@
 import streamlit as st
 import tempfile
-from utils.embedding import get_embedding
+from utils.embeddings import get_embedding
 from utils.video_processing import process_video
 
 st.title("Face Recognition in Video 🎥")
