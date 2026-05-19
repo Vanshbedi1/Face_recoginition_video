@@ -26,8 +26,9 @@ if image_file and video_file:
     with st.spinner("Loading AI model... first run may take time ⏳"):
         target_embedding = get_embedding(img_path)
 
-    # Step 2: process video
-    timestamps = process_video(vid_path, target_embedding)
+    with st.spinner("🎬 Scanning video... (this may take time)"):
+        timestamps = process_video(vid_path, target_embedding)
+
 
     if timestamps:
         st.success(f"Face found at timestamps (seconds): {timestamps}")

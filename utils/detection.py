@@ -1,23 +1,31 @@
-import cv2
-import mediapipe as mp
-
-mp_face = mp.solutions.face_detection
-face_detection = mp_face.FaceDetection(min_detection_confidence=0.5)
+from deepface import DeepFace
 
 def detect_faces(frame):
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = face_detection.process(rgb)
+    try:
+        faces = DeepFace.extract_faces(
+            img_path=frame,
+            enforce_detection=False,
+            detector_backend="opencv"  # fast & stable
+        )
 
-    faces = []
-    if results.detections:
-        h, w, _ = frame.shape
-        for det in results.detections:
-            bbox = det.location_data.relative_bounding_box
-            x = int(bbox.xmin * w)
-            y = int(bbox.ymin * h)
-            w_box = int(bbox.width * w)
-            h_box = int(bbox.height * h)
+        results = []
 
-            faces.append((x, y, w_box, h_box))
+        for face in faces:
+            region = face["facial_area"]
 
-    return faces
+            x = region["x"]
+            y = region["y"]
+            w = region["w"]
+            h = region["h"]
+
+            confidence = face.get("confidence", 0)
+
+            results.append({
+                "box": (x, y, w, h),
+                "confidence": confidence
+            })
+
+        return results
+
+    except:
+        return []
