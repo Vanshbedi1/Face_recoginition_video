@@ -1,28 +1,47 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
-from utils.face_utils import load_known_faces, recognize_faces
+import cv2
+import os
 
-st.title("Face Recognition System")
+from utils.detection import detect_faces
+from utils.embedding import get_embedding
+from utils.video_processing import process_video
 
-load_known_faces()
+st.title("Face Recognition in Video")
 
-uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+img_file = st.file_uploader("Upload Face Image", type=["jpg", "png"])
+video_file = st.file_uploader("Upload Video", type=["mp4", "avi"])
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    frame = np.array(image)
+if img_file and video_file:
 
-    results = recognize_faces(frame)
+    # 🔹 Process image
+    img = Image.open(img_file)
+    frame = np.array(img)
 
-    for res in results:
-        top, right, bottom, left = res["location"]
+    faces = detect_faces(frame)
 
-        cv2.rectangle(frame, (left, top), (right, bottom), (0,255,0), 2)
-        label = f"{res['name']} ({res['confidence']})"
+    if len(faces) == 0:
+        st.error("No face found in image")
+    else:
+        x, y, w, h = faces[0]
+        face = frame[y:y+h, x:x+w]
+        target_embedding = get_embedding(face)
 
-        cv2.putText(frame, label, (left, top-10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        # 🔹 Save video
+        os.makedirs("temp", exist_ok=True)
+        video_path = "temp/input.mp4"
 
-    st.image(frame, channels="BGR")
+        with open(video_path, "wb") as f:
+            f.write(video_file.read())
+
+        # 🔹 Process video
+        timestamps = process_video(video_path, target_embedding)
+
+        # 🔹 Show result
+        st.success("Face detected at:")
+
+        for t, score in timestamps:
+            mins = int(t // 60)
+            secs = int(t % 60)
+            st.write(f"{mins:02d}:{secs:02d} → Confidence: {round(score*100,2)}%")
