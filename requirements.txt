@@ -1,0 +1,10 @@
+face-recognition-app/
+│
+├── app.py
+├── requirements.txt
+├── known_faces/
+│   ├── vansh.jpg
+│   ├── person2.jpg
+│
+├── utils/
+│   └── face_utils.py
