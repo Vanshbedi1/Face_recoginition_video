@@ -1,47 +1,34 @@
 import streamlit as st
-import numpy as np
-from PIL import Image
-import cv2
-import os
-
-from utils.detection import detect_faces
+import tempfile
 from utils.embedding import get_embedding
 from utils.video_processing import process_video
 
-st.title("Face Recognition in Video")
+st.title("Face Recognition in Video 🎥")
 
-img_file = st.file_uploader("Upload Face Image", type=["jpg", "png"])
-video_file = st.file_uploader("Upload Video", type=["mp4", "avi"])
+# Upload image
+image_file = st.file_uploader("Upload Face Image", type=["jpg", "png"])
 
-if img_file and video_file:
+# Upload video
+video_file = st.file_uploader("Upload Video", type=["mp4", "avi", "mov"])
 
-    # 🔹 Process image
-    img = Image.open(img_file)
-    frame = np.array(img)
+if image_file and video_file:
+    with tempfile.NamedTemporaryFile(delete=False) as img_tmp:
+        img_tmp.write(image_file.read())
+        img_path = img_tmp.name
 
-    faces = detect_faces(frame)
+    with tempfile.NamedTemporaryFile(delete=False) as vid_tmp:
+        vid_tmp.write(video_file.read())
+        vid_path = vid_tmp.name
 
-    if len(faces) == 0:
-        st.error("No face found in image")
+    st.info("Processing... ⏳")
+
+    # Step 1: embedding
+    target_embedding = get_embedding(img_path)
+
+    # Step 2: process video
+    timestamps = process_video(vid_path, target_embedding)
+
+    if timestamps:
+        st.success(f"Face found at timestamps (seconds): {timestamps}")
     else:
-        x, y, w, h = faces[0]
-        face = frame[y:y+h, x:x+w]
-        target_embedding = get_embedding(face)
-
-        # 🔹 Save video
-        os.makedirs("temp", exist_ok=True)
-        video_path = "temp/input.mp4"
-
-        with open(video_path, "wb") as f:
-            f.write(video_file.read())
-
-        # 🔹 Process video
-        timestamps = process_video(video_path, target_embedding)
-
-        # 🔹 Show result
-        st.success("Face detected at:")
-
-        for t, score in timestamps:
-            mins = int(t // 60)
-            secs = int(t % 60)
-            st.write(f"{mins:02d}:{secs:02d} → Confidence: {round(score*100,2)}%")
+        st.warning("Face not found in video")

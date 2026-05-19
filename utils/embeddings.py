@@ -1,8 +1,10 @@
-import cv2
-import numpy as np
+from deepface import DeepFace
 
-def get_embedding(face_img):
-    face_img = cv2.resize(face_img, (160, 160))
-    face_img = face_img / 255.0
-    return face_img.flatten()[:128]
-    
+def get_embedding(image_path):
+    result = DeepFace.represent(
+        img_path=image_path,
+        model_name="Facenet",
+        enforce_detection=False
+    )
+
+    return result[0]["embedding"]

@@ -1,6 +1,7 @@
 streamlit
 opencv-python-headless==4.9.0.80
 numpy==1.26.4
-mediapipe==0.10.9
+deepface==0.0.79
 scikit-learn
 Pillow
+tensorflow==2.15.0
