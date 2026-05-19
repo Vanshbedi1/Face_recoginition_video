@@ -3,6 +3,9 @@ import tempfile
 from utils.embeddings import get_embedding
 from utils.video_processing import process_video
 
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 st.title("Face Recognition in Video 🎥")
 
 # Upload image
